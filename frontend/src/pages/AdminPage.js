@@ -55,13 +55,16 @@ const AdminPage = () => {
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('session_token');
-      const [usersRes, translationsRes, comptesRes, opportunitesRes, qualityRes, incidentsRes] = await Promise.all([
+      const [usersRes, translationsRes, comptesRes, opportunitesRes, qualityRes, incidentsRes, statusOppRes, statusIncRes, statusQualRes] = await Promise.all([
         axios.get(`${API}/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/admin/translations`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/comptes`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/opportunites`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/quality`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API}/incidents`, { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${API}/incidents`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/admin/custom-status/opportunites`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/admin/custom-status/incidents`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/admin/custom-status/quality`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setUsers(usersRes.data);
       setTranslations(translationsRes.data);
@@ -69,6 +72,11 @@ const AdminPage = () => {
       setOpportunites(opportunitesRes.data);
       setQualityRecords(qualityRes.data);
       setIncidents(incidentsRes.data);
+      setCustomStatuses({
+        opportunites: statusOppRes.data,
+        incidents: statusIncRes.data,
+        quality: statusQualRes.data
+      });
     } catch (error) {
       console.error('Error fetching admin data:', error);
       toast.error('Erreur lors du chargement');
