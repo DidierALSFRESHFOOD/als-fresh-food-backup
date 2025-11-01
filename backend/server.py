@@ -439,6 +439,17 @@ async def get_quality_records(user: User = Depends(get_current_user)):
             r['created_at'] = datetime.fromisoformat(r['created_at'])
     return records
 
+@api_router.delete("/quality/{quality_id}")
+async def delete_quality_record(quality_id: str, user: User = Depends(get_current_user)):
+    result = await db.quality_records.delete_one({'id': quality_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Fiche qualité non trouvée")
+    
+    # Also delete related incidents
+    await db.incidents.delete_many({'quality_record_id': quality_id})
+    
+    return {'message': 'Fiche qualité et incidents associés supprimés'}
+
 @api_router.post("/incidents", response_model=Incident)
 async def create_incident(data: Incident, user: User = Depends(get_current_user)):
     incident_dict = data.model_dump()
