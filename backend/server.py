@@ -654,6 +654,179 @@ async def update_translation(key_id: str, data: dict, user: User = Depends(get_c
         updated['updated_at'] = datetime.fromisoformat(updated['updated_at'])
     return TranslationKey(**updated)
 
+@api_router.get("/admin/export-data")
+async def export_all_data(user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    try:
+        # Create workbook
+        wb = Workbook()
+        
+        # Remove default sheet
+        wb.remove(wb.active)
+        
+        # Export Users
+        ws_users = wb.create_sheet("Utilisateurs")
+        ws_users.append(["ID", "Nom", "Email", "Rôle", "Division", "Région", "Date création"])
+        users = await db.users.find({}, {'_id': 0, 'password_hash': 0}).to_list(1000)
+        for u in users:
+            ws_users.append([
+                u.get('id', ''),
+                u.get('name', ''),
+                u.get('email', ''),
+                u.get('role', ''),
+                u.get('division', ''),
+                u.get('region', ''),
+                u.get('created_at', '')
+            ])
+        
+        # Export Comptes
+        ws_comptes = wb.create_sheet("Clients_Prospects")
+        ws_comptes.append([
+            "ID", "Raison Sociale", "Division", "Région", "Adresse", "Ville", "Code Postal",
+            "Secteur", "Taille", "Contact Nom", "Contact Poste", "Contact Email", 
+            "Contact Téléphone", "Source", "Créé par", "Date création"
+        ])
+        comptes = await db.comptes.find({}, {'_id': 0}).to_list(1000)
+        for c in comptes:
+            ws_comptes.append([
+                c.get('id', ''),
+                c.get('raison_sociale', ''),
+                c.get('division', ''),
+                c.get('region', ''),
+                c.get('adresse', ''),
+                c.get('ville', ''),
+                c.get('code_postal', ''),
+                c.get('secteur', ''),
+                c.get('taille', ''),
+                c.get('contact_nom', ''),
+                c.get('contact_poste', ''),
+                c.get('contact_email', ''),
+                c.get('contact_telephone', ''),
+                c.get('source', ''),
+                c.get('created_by', ''),
+                c.get('created_at', '')
+            ])
+        
+        # Export Opportunités
+        ws_opps = wb.create_sheet("Opportunités")
+        ws_opps.append([
+            "ID", "Compte ID", "Type Besoin", "Volumes Estimés", "Températures", "Fréquence",
+            "Marchandises", "Départ", "Arrivée", "Contraintes Horaires", "Urgence",
+            "Commercial Responsable", "Date Premier Contact", "Canal", "Statut",
+            "Montant Estimé", "Prochaine Relance", "Commentaires", "Date création"
+        ])
+        opps = await db.opportunites.find({}, {'_id': 0}).to_list(1000)
+        for o in opps:
+            ws_opps.append([
+                o.get('id', ''),
+                o.get('compte_id', ''),
+                o.get('type_besoin', ''),
+                o.get('volumes_estimes', ''),
+                o.get('temperatures', ''),
+                o.get('frequence', ''),
+                o.get('marchandises', ''),
+                o.get('depart', ''),
+                o.get('arrivee', ''),
+                o.get('contraintes_horaires', ''),
+                o.get('urgence', ''),
+                o.get('commercial_responsable', ''),
+                o.get('date_premier_contact', ''),
+                o.get('canal', ''),
+                o.get('statut', ''),
+                o.get('montant_estime', ''),
+                o.get('prochaine_relance', ''),
+                o.get('commentaires', ''),
+                o.get('created_at', '')
+            ])
+        
+        # Export Quality Records
+        ws_quality = wb.create_sheet("Fiches_Qualité")
+        ws_quality.append([
+            "ID", "Compte ID", "Division", "Région", "Période", "Type Prestation",
+            "Taux Service", "Nb Incidents", "Score Satisfaction", "Commentaires", "Date création"
+        ])
+        quality_records = await db.quality_records.find({}, {'_id': 0}).to_list(1000)
+        for q in quality_records:
+            ws_quality.append([
+                q.get('id', ''),
+                q.get('compte_id', ''),
+                q.get('division', ''),
+                q.get('region', ''),
+                q.get('periode', ''),
+                q.get('type_prestation', ''),
+                q.get('taux_service', ''),
+                q.get('nb_incidents', ''),
+                q.get('score_satisfaction', ''),
+                q.get('commentaires', ''),
+                q.get('created_at', '')
+            ])
+        
+        # Export Incidents
+        ws_incidents = wb.create_sheet("Incidents")
+        ws_incidents.append([
+            "ID", "Quality Record ID", "Type", "Gravité", "Description", "Statut",
+            "Action Corrective", "Date Clôture", "Date création"
+        ])
+        incidents = await db.incidents.find({}, {'_id': 0}).to_list(1000)
+        for i in incidents:
+            ws_incidents.append([
+                i.get('id', ''),
+                i.get('quality_record_id', ''),
+                i.get('type', ''),
+                i.get('gravite', ''),
+                i.get('description', ''),
+                i.get('statut', ''),
+                i.get('action_corrective', ''),
+                i.get('closed_at', ''),
+                i.get('created_at', '')
+            ])
+        
+        # Export Survey Responses
+        ws_surveys = wb.create_sheet("Enquêtes_Satisfaction")
+        ws_surveys.append([
+            "ID", "Compte ID", "Division", "Période", "Note Globale", 
+            "Commentaires", "Date soumission"
+        ])
+        survey_responses = await db.survey_responses.find({}, {'_id': 0}).to_list(1000)
+        for s in survey_responses:
+            ws_surveys.append([
+                s.get('id', ''),
+                s.get('compte_id', ''),
+                s.get('division', ''),
+                s.get('periode', ''),
+                s.get('note_globale', ''),
+                s.get('commentaires', ''),
+                s.get('submitted_at', '')
+            ])
+        
+        # Style headers
+        header_fill = PatternFill(start_color="2563EB", end_color="2563EB", fill_type="solid")
+        header_font = Font(color="FFFFFF", bold=True)
+        
+        for sheet in wb.worksheets:
+            for cell in sheet[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+        
+        # Save to temp file
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx')
+        wb.save(temp_file.name)
+        temp_file.close()
+        
+        # Return file
+        return FileResponse(
+            temp_file.name,
+            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            filename=f'export_als_groupe_{datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")}.xlsx'
+        )
+        
+    except Exception as e:
+        logger.error(f"Error exporting data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'export: {str(e)}")
+
 # Include router
 app.include_router(api_router)
 
