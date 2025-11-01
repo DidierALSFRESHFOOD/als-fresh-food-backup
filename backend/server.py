@@ -124,6 +124,24 @@ class Opportunite(BaseModel):
     commentaires: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class OpportuniteCreate(BaseModel):
+    compte_id: str
+    type_besoin: Optional[str] = None
+    volumes_estimes: Optional[str] = None
+    temperatures: Optional[str] = None
+    frequence: Optional[str] = None
+    marchandises: Optional[str] = None
+    depart: Optional[str] = None
+    arrivee: Optional[str] = None
+    contraintes_horaires: Optional[str] = None
+    urgence: Optional[str] = None
+    date_premier_contact: Optional[datetime] = None
+    canal: Optional[str] = None
+    statut: str = "Prospecté"
+    montant_estime: Optional[float] = None
+    prochaine_relance: Optional[datetime] = None
+    commentaires: Optional[str] = None
+
 class QualityRecord(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
