@@ -26,18 +26,6 @@ const LoginPage = () => {
     }
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await register(registerData.email, registerData.password, registerData.name, registerData.role);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleGoogleLogin = () => {
     window.location.href = `${GOOGLE_AUTH_URL}?redirect=${encodeURIComponent(REDIRECT_URL)}`;
   };
