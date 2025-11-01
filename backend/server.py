@@ -87,6 +87,21 @@ class Compte(BaseModel):
     created_by: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class CompteCreate(BaseModel):
+    raison_sociale: str
+    division: str
+    adresse: Optional[str] = None
+    ville: Optional[str] = None
+    code_postal: Optional[str] = None
+    region: str
+    secteur: Optional[str] = None
+    taille: Optional[str] = None
+    contact_nom: Optional[str] = None
+    contact_poste: Optional[str] = None
+    contact_email: Optional[EmailStr] = None
+    contact_telephone: Optional[str] = None
+    source: Optional[str] = None
+
 class Opportunite(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
