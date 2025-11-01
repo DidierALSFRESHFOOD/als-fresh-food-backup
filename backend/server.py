@@ -670,6 +670,76 @@ async def init_translations(user: User = Depends(get_current_user)):
     
     return {'message': f'{len(default_translations)} traductions initialisées avec succès'}
 
+# ==================== CUSTOM STATUS ROUTES ====================
+
+@api_router.get("/admin/custom-status/{category}")
+async def get_custom_statuses(category: str, user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    statuses = await db.custom_statuses.find({'category': category}, {'_id': 0}).sort('order', 1).to_list(100)
+    return statuses
+
+@api_router.post("/admin/custom-status")
+async def create_custom_status(data: CustomStatus, user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    status = CustomStatus(**data.model_dump(), created_by=user.id)
+    status_dict = status.model_dump()
+    status_dict['created_at'] = status_dict['created_at'].isoformat()
+    await db.custom_statuses.insert_one(status_dict)
+    return status
+
+@api_router.delete("/admin/custom-status/{status_id}")
+async def delete_custom_status(status_id: str, user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    result = await db.custom_statuses.delete_one({'id': status_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Statut non trouvé")
+    return {'message': 'Statut supprimé'}
+
+@api_router.post("/admin/custom-status/init")
+async def init_custom_statuses(user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    # Default statuses
+    default_statuses = [
+        # Opportunités
+        {'category': 'opportunites', 'label': 'Prospecté', 'color': 'blue', 'order': 1},
+        {'category': 'opportunites', 'label': 'En discussion', 'color': 'yellow', 'order': 2},
+        {'category': 'opportunites', 'label': 'Devis envoyé', 'color': 'orange', 'order': 3},
+        {'category': 'opportunites', 'label': 'Négociation', 'color': 'purple', 'order': 4},
+        {'category': 'opportunites', 'label': 'Signé', 'color': 'green', 'order': 5},
+        {'category': 'opportunites', 'label': 'Perdu', 'color': 'red', 'order': 6},
+        
+        # Incidents
+        {'category': 'incidents', 'label': 'Ouvert', 'color': 'red', 'order': 1},
+        {'category': 'incidents', 'label': 'En cours', 'color': 'orange', 'order': 2},
+        {'category': 'incidents', 'label': 'Résolu', 'color': 'green', 'order': 3},
+        {'category': 'incidents', 'label': 'Clos', 'color': 'gray', 'order': 4},
+        
+        # Quality
+        {'category': 'quality', 'label': 'En cours', 'color': 'blue', 'order': 1},
+        {'category': 'quality', 'label': 'Validé', 'color': 'green', 'order': 2},
+        {'category': 'quality', 'label': 'À améliorer', 'color': 'orange', 'order': 3},
+    ]
+    
+    existing = await db.custom_statuses.count_documents({})
+    if existing > 0:
+        return {'message': 'Statuts déjà initialisés', 'count': existing}
+    
+    for status_data in default_statuses:
+        status = CustomStatus(**status_data, created_by=user.id)
+        status_dict = status.model_dump()
+        status_dict['created_at'] = status_dict['created_at'].isoformat()
+        await db.custom_statuses.insert_one(status_dict)
+    
+    return {'message': f'{len(default_statuses)} statuts initialisés avec succès'}
+
 @api_router.get("/admin/translations", response_model=List[TranslationKey])
 async def get_translations(user: User = Depends(get_current_user)):
     if user.role != 'Admin_Directeur':
