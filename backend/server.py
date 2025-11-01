@@ -472,11 +472,12 @@ async def delete_opportunite(opp_id: str, user: User = Depends(get_current_user)
 # ==================== QUALITY ROUTES ====================
 
 @api_router.post("/quality", response_model=QualityRecord)
-async def create_quality_record(data: QualityRecord, user: User = Depends(get_current_user)):
-    record_dict = data.model_dump()
+async def create_quality_record(data: QualityRecordCreate, user: User = Depends(get_current_user)):
+    record = QualityRecord(**data.model_dump())
+    record_dict = record.model_dump()
     record_dict['created_at'] = record_dict['created_at'].isoformat()
     await db.quality_records.insert_one(record_dict)
-    return data
+    return record
 
 @api_router.get("/quality", response_model=List[QualityRecord])
 async def get_quality_records(user: User = Depends(get_current_user)):
