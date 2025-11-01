@@ -99,7 +99,7 @@ const LoginPage = () => {
 
         {/* Footer */}
         <p className="mt-8 text-blue-100 text-sm text-center">
-          © 2025 GROUPE ALS - Transport frigorifique du dernier kilomètre
+          © 2025 ALS GROUPE - Transport frigorifique du dernier kilomètre
         </p>
       </div>
     </div>
