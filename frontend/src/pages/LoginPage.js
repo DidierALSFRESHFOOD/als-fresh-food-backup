@@ -26,10 +26,6 @@ const LoginPage = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${GOOGLE_AUTH_URL}?redirect=${encodeURIComponent(REDIRECT_URL)}`;
-  };
-
   return (
     <div className="min-h-screen bg-truck-pattern relative">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 via-blue-800/85 to-blue-700/90"></div>
