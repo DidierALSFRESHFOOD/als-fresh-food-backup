@@ -331,7 +331,10 @@ async def logout(response: Response, request: Request):
 
 @api_router.post("/comptes", response_model=Compte)
 async def create_compte(data: Compte, user: User = Depends(get_current_user)):
-    compte = Compte(**data.model_dump(), created_by=user.id)
+    # Override created_by with current user
+    compte_data = data.model_dump()
+    compte_data['created_by'] = user.id
+    compte = Compte(**compte_data)
     compte_dict = compte.model_dump()
     compte_dict['created_at'] = compte_dict['created_at'].isoformat()
     await db.comptes.insert_one(compte_dict)
