@@ -9,6 +9,7 @@ import '@/App.css';
 import LoginPage from '@/pages/LoginPage';
 import Dashboard from '@/pages/Dashboard';
 import ComptesPage from '@/pages/ComptesPage';
+import CompteDetailPage from '@/pages/CompteDetailPage';
 import OpportunitesPage from '@/pages/OpportunitesPage';
 import QualitePage from '@/pages/QualitePage';
 import IncidentsPage from '@/pages/IncidentsPage';
