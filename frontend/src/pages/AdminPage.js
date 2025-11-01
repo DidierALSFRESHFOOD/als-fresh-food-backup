@@ -111,6 +111,30 @@ const AdminPage = () => {
     }
   };
 
+  const handleExportData = async () => {
+    try {
+      const token = localStorage.getItem('session_token');
+      const response = await axios.get(`${API}/admin/export-data`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `export_als_groupe_${new Date().toISOString().slice(0,10)}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success('Export Excel téléchargé avec succès !');
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      toast.error('Erreur lors de l\'export');
+    }
+  };
+
   const handleCreateTranslation = async (e) => {
     e.preventDefault();
     try {
