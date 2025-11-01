@@ -415,6 +415,13 @@ async def get_opportunites(user: User = Depends(get_current_user)):
             o['prochaine_relance'] = datetime.fromisoformat(o['prochaine_relance'])
     return opps
 
+@api_router.delete("/opportunites/{opp_id}")
+async def delete_opportunite(opp_id: str, user: User = Depends(get_current_user)):
+    result = await db.opportunites.delete_one({'id': opp_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Opportunité non trouvée")
+    return {'message': 'Opportunité supprimée'}
+
 # ==================== QUALITY ROUTES ====================
 
 @api_router.post("/quality", response_model=QualityRecord)
