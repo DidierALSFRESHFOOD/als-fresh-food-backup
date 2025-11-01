@@ -257,6 +257,7 @@ const AdminPage = () => {
                   </form>
                 </DialogContent>
               </Dialog>
+              </div>
             </div>
 
             {translations.length === 0 ? (
