@@ -94,6 +94,11 @@ const ComptesPage = () => {
     compte.contact_nom?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getCreatorName = (createdBy) => {
+    const creator = users.find(u => u.id === createdBy);
+    return creator ? creator.name : 'Inconnu';
+  };
+
   return (
     <Layout>
       <div className="p-6 space-y-6" data-testid="comptes-page">
