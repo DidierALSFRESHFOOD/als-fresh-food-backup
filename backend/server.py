@@ -514,6 +514,24 @@ async def create_user_admin(data: User, user: User = Depends(get_current_user)):
     await db.users.insert_one(user_dict)
     return new_user
 
+@api_router.delete("/admin/users/{user_id}")
+async def delete_user(user_id: str, user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    # Don't allow deleting yourself
+    if user_id == user.id:
+        raise HTTPException(status_code=400, detail="Vous ne pouvez pas supprimer votre propre compte")
+    
+    result = await db.users.delete_one({'id': user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    # Also delete user sessions
+    await db.user_sessions.delete_many({'user_id': user_id})
+    
+    return {'message': 'Utilisateur supprimé avec succès'}
+
 @api_router.get("/admin/translations", response_model=List[TranslationKey])
 async def get_translations(user: User = Depends(get_current_user)):
     if user.role != 'Admin_Directeur':
