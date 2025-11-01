@@ -6,9 +6,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Truck, LogIn } from 'lucide-react';
 
-const GOOGLE_AUTH_URL = 'https://auth.emergentagent.com/';
-const REDIRECT_URL = window.location.origin + '/';
-
 const LoginPage = () => {
   const { login } = useContext(AuthContext);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
