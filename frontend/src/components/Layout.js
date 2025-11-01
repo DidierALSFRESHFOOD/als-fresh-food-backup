@@ -71,7 +71,7 @@ const Layout = ({ children }) => {
               <div className="hidden sm:block text-right">
                 <p className="text-sm font-medium">{user?.name}</p>
                 <p className="text-xs text-blue-100">
-                  {user?.division || 'ALS'} {user?.region && `• ${user.region}`}
+                  {user?.division || 'GROUPE ALS'} {user?.region && `• ${user.region}`}
                 </p>
               </div>
               <Button
