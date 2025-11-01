@@ -469,6 +469,13 @@ async def get_incidents(user: User = Depends(get_current_user)):
             i['closed_at'] = datetime.fromisoformat(i['closed_at'])
     return incidents
 
+@api_router.delete("/incidents/{incident_id}")
+async def delete_incident(incident_id: str, user: User = Depends(get_current_user)):
+    result = await db.incidents.delete_one({'id': incident_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Incident non trouvé")
+    return {'message': 'Incident supprimé'}
+
 # ==================== SURVEY ROUTES ====================
 
 @api_router.post("/surveys/responses", response_model=SurveyResponse)
