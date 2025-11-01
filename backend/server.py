@@ -532,6 +532,81 @@ async def delete_user(user_id: str, user: User = Depends(get_current_user)):
     
     return {'message': 'Utilisateur supprimé avec succès'}
 
+@api_router.get("/admin/translations/init")
+async def init_translations(user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    # Default translations for the app
+    default_translations = [
+        {'key': 'app.title', 'value': 'Suivi Activité Commerciale', 'lang': 'fr-FR'},
+        {'key': 'app.subtitle', 'value': 'ALS FRESH FOOD • ALS PHARMA', 'lang': 'fr-FR'},
+        {'key': 'login.title', 'value': 'Connexion', 'lang': 'fr-FR'},
+        {'key': 'login.description', 'value': 'Accédez à votre espace commercial et qualité', 'lang': 'fr-FR'},
+        {'key': 'login.email', 'value': 'Email', 'lang': 'fr-FR'},
+        {'key': 'login.password', 'value': 'Mot de passe', 'lang': 'fr-FR'},
+        {'key': 'login.submit', 'value': 'Se connecter', 'lang': 'fr-FR'},
+        {'key': 'login.google', 'value': 'Continuer avec Google', 'lang': 'fr-FR'},
+        {'key': 'nav.dashboard', 'value': 'Tableau de bord', 'lang': 'fr-FR'},
+        {'key': 'nav.comptes', 'value': 'Clients / Prospects', 'lang': 'fr-FR'},
+        {'key': 'nav.opportunites', 'value': 'Opportunités', 'lang': 'fr-FR'},
+        {'key': 'nav.qualite', 'value': 'Qualité Service', 'lang': 'fr-FR'},
+        {'key': 'nav.incidents', 'value': 'Incidents', 'lang': 'fr-FR'},
+        {'key': 'nav.satisfaction', 'value': 'Satisfaction', 'lang': 'fr-FR'},
+        {'key': 'nav.admin', 'value': 'Administration', 'lang': 'fr-FR'},
+        {'key': 'nav.logout', 'value': 'Déconnexion', 'lang': 'fr-FR'},
+        {'key': 'dashboard.welcome', 'value': 'Bienvenue', 'lang': 'fr-FR'},
+        {'key': 'dashboard.commercial', 'value': 'Module Commercial', 'lang': 'fr-FR'},
+        {'key': 'dashboard.qualite', 'value': 'Module Qualité & Service Clientèle', 'lang': 'fr-FR'},
+        {'key': 'dashboard.ca_signe', 'value': 'CA Signé', 'lang': 'fr-FR'},
+        {'key': 'dashboard.clients_prospects', 'value': 'Clients / Prospects', 'lang': 'fr-FR'},
+        {'key': 'dashboard.opportunites', 'value': 'Opportunités', 'lang': 'fr-FR'},
+        {'key': 'dashboard.opportunites_signees', 'value': 'Opportunités Signées', 'lang': 'fr-FR'},
+        {'key': 'dashboard.score_satisfaction', 'value': 'Score Satisfaction', 'lang': 'fr-FR'},
+        {'key': 'dashboard.fiches_qualite', 'value': 'Fiches Qualité', 'lang': 'fr-FR'},
+        {'key': 'dashboard.incidents_total', 'value': 'Incidents Total', 'lang': 'fr-FR'},
+        {'key': 'dashboard.incidents_ouverts', 'value': 'Incidents Ouverts', 'lang': 'fr-FR'},
+        {'key': 'comptes.title', 'value': 'Clients / Prospects', 'lang': 'fr-FR'},
+        {'key': 'comptes.description', 'value': 'Gestion de la base clients et prospects', 'lang': 'fr-FR'},
+        {'key': 'comptes.add', 'value': 'Nouveau Compte', 'lang': 'fr-FR'},
+        {'key': 'comptes.search', 'value': 'Rechercher par raison sociale, ville, contact...', 'lang': 'fr-FR'},
+        {'key': 'opportunites.title', 'value': 'Opportunités Commerciales', 'lang': 'fr-FR'},
+        {'key': 'opportunites.description', 'value': 'Pipeline de vente et suivi des opportunités', 'lang': 'fr-FR'},
+        {'key': 'opportunites.add', 'value': 'Nouvelle Opportunité', 'lang': 'fr-FR'},
+        {'key': 'qualite.title', 'value': 'Qualité de Service', 'lang': 'fr-FR'},
+        {'key': 'qualite.description', 'value': 'Suivi de la satisfaction client et taux de service', 'lang': 'fr-FR'},
+        {'key': 'qualite.add', 'value': 'Nouvelle Fiche Qualité', 'lang': 'fr-FR'},
+        {'key': 'incidents.title', 'value': 'Incidents Qualité', 'lang': 'fr-FR'},
+        {'key': 'incidents.description', 'value': 'Suivi et résolution des incidents', 'lang': 'fr-FR'},
+        {'key': 'incidents.add', 'value': 'Nouvel Incident', 'lang': 'fr-FR'},
+        {'key': 'admin.title', 'value': 'Administration', 'lang': 'fr-FR'},
+        {'key': 'admin.description', 'value': 'Gestion des utilisateurs, textes et paramètres', 'lang': 'fr-FR'},
+        {'key': 'admin.tab_translations', 'value': 'Textes & Libellés', 'lang': 'fr-FR'},
+        {'key': 'admin.tab_users', 'value': 'Utilisateurs', 'lang': 'fr-FR'},
+        {'key': 'admin.tab_settings', 'value': 'Paramètres', 'lang': 'fr-FR'},
+        {'key': 'admin.add_translation', 'value': 'Nouvelle Clé', 'lang': 'fr-FR'},
+        {'key': 'admin.add_user', 'value': 'Nouvel Utilisateur', 'lang': 'fr-FR'},
+        {'key': 'common.save', 'value': 'Enregistrer', 'lang': 'fr-FR'},
+        {'key': 'common.delete', 'value': 'Supprimer', 'lang': 'fr-FR'},
+        {'key': 'common.cancel', 'value': 'Annuler', 'lang': 'fr-FR'},
+        {'key': 'common.create', 'value': 'Créer', 'lang': 'fr-FR'},
+        {'key': 'common.edit', 'value': 'Modifier', 'lang': 'fr-FR'},
+    ]
+    
+    # Check if translations already exist
+    existing_count = await db.translation_keys.count_documents({})
+    if existing_count > 0:
+        return {'message': 'Traductions déjà initialisées', 'count': existing_count}
+    
+    # Insert default translations
+    for trans in default_translations:
+        translation = TranslationKey(**trans, updated_by=user.id)
+        trans_dict = translation.model_dump()
+        trans_dict['updated_at'] = trans_dict['updated_at'].isoformat()
+        await db.translation_keys.insert_one(trans_dict)
+    
+    return {'message': f'{len(default_translations)} traductions initialisées avec succès'}
+
 @api_router.get("/admin/translations", response_model=List[TranslationKey])
 async def get_translations(user: User = Depends(get_current_user)):
     if user.role != 'Admin_Directeur':
