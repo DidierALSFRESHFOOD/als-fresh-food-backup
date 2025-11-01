@@ -16,6 +16,7 @@ const API = `${BACKEND_URL}/api`;
 
 const ComptesPage = () => {
   const [comptes, setComptes] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
