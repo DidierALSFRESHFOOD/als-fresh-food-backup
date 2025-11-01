@@ -10,9 +10,8 @@ const GOOGLE_AUTH_URL = 'https://auth.emergentagent.com/';
 const REDIRECT_URL = window.location.origin + '/';
 
 const LoginPage = () => {
-  const { login, register } = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [registerData, setRegisterData] = useState({ email: '', password: '', name: '', role: 'DevCo_IDF' });
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
