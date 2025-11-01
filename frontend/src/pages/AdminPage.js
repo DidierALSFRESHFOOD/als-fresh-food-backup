@@ -407,8 +407,20 @@ const AdminPage = () => {
               {users.map((user) => (
                 <Card key={user.id} className="hover:shadow-md transition-shadow" data-testid={`user-card-${user.id}`}>
                   <CardHeader>
-                    <CardTitle className="text-lg">{user.name}</CardTitle>
-                    <CardDescription>{user.email}</CardDescription>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-lg">{user.name}</CardTitle>
+                        <CardDescription>{user.email}</CardDescription>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteUser(user.id)}
+                        data-testid={`delete-user-${user.id}`}
+                      >
+                        Supprimer
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 text-sm">
