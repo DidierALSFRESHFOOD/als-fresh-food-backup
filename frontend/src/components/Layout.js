@@ -62,7 +62,7 @@ const Layout = ({ children }) => {
               />
               <div>
                 <h1 className="text-xl font-bold">Suivi Activité Commerciale</h1>
-                <p className="text-xs text-blue-100 hidden sm:block">ALS GROUPE</p>
+                <p className="text-xs text-blue-100 hidden sm:block">GROUPE ALS</p>
               </div>
             </div>
 
