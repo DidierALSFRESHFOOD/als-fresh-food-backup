@@ -148,6 +148,74 @@ const AdminPage = () => {
     }
   };
 
+  const handleDeleteCompte = async (compteId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce compte ?')) {
+      return;
+    }
+    try {
+      const token = localStorage.getItem('session_token');
+      await axios.delete(`${API}/comptes/${compteId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Compte supprimé avec succès !');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting compte:', error);
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  const handleDeleteOpportunite = async (oppId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette opportunité ?')) {
+      return;
+    }
+    try {
+      const token = localStorage.getItem('session_token');
+      await axios.delete(`${API}/opportunites/${oppId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Opportunité supprimée avec succès !');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting opportunite:', error);
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  const handleDeleteQuality = async (qualityId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette fiche qualité ?')) {
+      return;
+    }
+    try {
+      const token = localStorage.getItem('session_token');
+      await axios.delete(`${API}/quality/${qualityId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Fiche qualité supprimée avec succès !');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting quality:', error);
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  const handleDeleteIncident = async (incidentId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet incident ?')) {
+      return;
+    }
+    try {
+      const token = localStorage.getItem('session_token');
+      await axios.delete(`${API}/incidents/${incidentId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Incident supprimé avec succès !');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting incident:', error);
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
   const handleCreateTranslation = async (e) => {
     e.preventDefault();
     try {
