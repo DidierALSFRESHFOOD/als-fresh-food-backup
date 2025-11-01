@@ -373,6 +373,18 @@ async def get_compte(compte_id: str, user: User = Depends(get_current_user)):
         compte['created_at'] = datetime.fromisoformat(compte['created_at'])
     return Compte(**compte)
 
+@api_router.delete("/comptes/{compte_id}")
+async def delete_compte(compte_id: str, user: User = Depends(get_current_user)):
+    result = await db.comptes.delete_one({'id': compte_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Compte non trouvé")
+    
+    # Also delete related opportunites
+    await db.opportunites.delete_many({'compte_id': compte_id})
+    await db.quality_records.delete_many({'compte_id': compte_id})
+    
+    return {'message': 'Compte et données associées supprimés'}
+
 # ==================== OPPORTUNITES ROUTES ====================
 
 @api_router.post("/opportunites", response_model=Opportunite)
