@@ -35,7 +35,7 @@ JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
 EMERGENT_SESSION_API = 'https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data'
 
 # Create the main app
-app = FastAPI(title="ALS GROUPE FRIGO KPI API")
+app = FastAPI(title="GROUPE ALS FRIGO KPI API")
 api_router = APIRouter(prefix="/api")
 
 # ==================== MODELS ====================
