@@ -21,10 +21,18 @@ const AdminPage = () => {
   const [opportunites, setOpportunites] = useState([]);
   const [qualityRecords, setQualityRecords] = useState([]);
   const [incidents, setIncidents] = useState([]);
+  const [customStatuses, setCustomStatuses] = useState({
+    opportunites: [],
+    incidents: [],
+    quality: []
+  });
   const [loading, setLoading] = useState(true);
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [translationDialogOpen, setTranslationDialogOpen] = useState(false);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('comptes');
+  const [statusCategory, setStatusCategory] = useState('opportunites');
+  const [newStatusLabel, setNewStatusLabel] = useState('');
   
   const [userFormData, setUserFormData] = useState({
     email: '',
