@@ -151,77 +151,8 @@ const LoginPage = () => {
                   </svg>
                   Continuer avec Google
                 </Button>
-              </TabsContent>
-
-              {/* Register Form */}
-              <TabsContent value="register">
-                <form onSubmit={handleRegister} className="space-y-4">
-                  <div>
-                    <Label htmlFor="register-name">Nom complet</Label>
-                    <Input
-                      id="register-name"
-                      type="text"
-                      placeholder="Jean Dupont"
-                      value={registerData.name}
-                      onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
-                      required
-                      data-testid="register-name-input"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="register-email">Email</Label>
-                    <Input
-                      id="register-email"
-                      type="email"
-                      placeholder="votre.email@als-groupe.com"
-                      value={registerData.email}
-                      onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                      required
-                      data-testid="register-email-input"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="register-password">Mot de passe</Label>
-                    <Input
-                      id="register-password"
-                      type="password"
-                      value={registerData.password}
-                      onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                      required
-                      data-testid="register-password-input"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="register-role">Rôle</Label>
-                    <Select
-                      value={registerData.role}
-                      onValueChange={(value) => setRegisterData({ ...registerData, role: value })}
-                    >
-                      <SelectTrigger data-testid="register-role-select">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Admin_Directeur">Directeur Commercial</SelectItem>
-                        <SelectItem value="Assistante_Direction">Assistante Direction</SelectItem>
-                        <SelectItem value="Directrice_Clientele">Directrice Clientèle</SelectItem>
-                        <SelectItem value="Assistante_Clientele">Assistante Clientèle</SelectItem>
-                        <SelectItem value="DevCo_IDF">Développement Commercial IDF</SelectItem>
-                        <SelectItem value="DevCo_HDF">Développement Commercial HDF</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full btn-als-primary" 
-                    disabled={loading}
-                    data-testid="register-submit-button"
-                  >
-                    {loading ? 'Création...' : 'Créer mon compte'}
-                    <UserPlus className="ml-2 h-4 w-4" />
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
