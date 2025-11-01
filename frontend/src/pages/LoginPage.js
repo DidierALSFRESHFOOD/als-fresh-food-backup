@@ -77,14 +77,9 @@ const LoginPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login" data-testid="login-tab">Se connecter</TabsTrigger>
-                <TabsTrigger value="register" data-testid="register-tab">S'inscrire</TabsTrigger>
-              </TabsList>
-
+            <div className="w-full">
               {/* Login Form */}
-              <TabsContent value="login">
+              <div>
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div>
                     <Label htmlFor="login-email">Email</Label>
