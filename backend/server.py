@@ -168,6 +168,16 @@ class SurveyScore(BaseModel):
     item_key: str
     score: int  # 0-9
 
+class CustomStatus(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    category: str  # opportunites, quality, incidents, comptes
+    label: str
+    color: Optional[str] = None
+    order: int = 0
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 # ==================== AUTH MODELS ====================
 
 class LoginRequest(BaseModel):
