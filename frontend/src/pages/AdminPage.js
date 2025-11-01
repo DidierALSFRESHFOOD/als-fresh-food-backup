@@ -79,6 +79,38 @@ const AdminPage = () => {
     }
   };
 
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('session_token');
+      await axios.delete(`${API}/admin/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Utilisateur supprimé avec succès !');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors de la suppression');
+    }
+  };
+
+  const handleInitTranslations = async () => {
+    try {
+      const token = localStorage.getItem('session_token');
+      const response = await axios.get(`${API}/admin/translations/init`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(response.data.message);
+      fetchData();
+    } catch (error) {
+      console.error('Error initializing translations:', error);
+      toast.error('Erreur lors de l\'initialisation');
+    }
+  };
+
   const handleCreateTranslation = async (e) => {
     e.preventDefault();
     try {
