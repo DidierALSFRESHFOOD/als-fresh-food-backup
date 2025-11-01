@@ -189,15 +189,23 @@ const AdminPage = () => {
           <TabsContent value="translations" className="space-y-4">
             <div className="flex justify-between items-center">
               <p className="text-sm text-gray-600">
-                Gérer les textes affichés dans l'application
+                Gérer tous les textes affichés dans l'application
               </p>
-              <Dialog open={translationDialogOpen} onOpenChange={setTranslationDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="btn-als-primary" data-testid="add-translation-button">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nouvelle Clé
-                  </Button>
-                </DialogTrigger>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handleInitTranslations}
+                  data-testid="init-translations-button"
+                >
+                  Initialiser les textes par défaut
+                </Button>
+                <Dialog open={translationDialogOpen} onOpenChange={setTranslationDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="btn-als-primary" data-testid="add-translation-button">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nouvelle Clé
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Nouvelle Clé de Traduction</DialogTitle>
