@@ -310,7 +310,12 @@ const ComptesPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredComptes.map((compte) => (
-              <Card key={compte.id} className="hover:shadow-lg transition-shadow" data-testid={`compte-card-${compte.id}`}>
+              <Card 
+                key={compte.id} 
+                className="hover:shadow-lg transition-shadow cursor-pointer" 
+                data-testid={`compte-card-${compte.id}`}
+                onClick={() => window.location.href = `/comptes/${compte.id}`}
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
