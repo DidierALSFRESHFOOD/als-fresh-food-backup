@@ -565,19 +565,232 @@ const AdminPage = () => {
           <TabsContent value="settings" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Paramètres Commerciaux</CardTitle>
+                <CardTitle>Paramètres Commerciaux - Gestion des Données</CardTitle>
                 <CardDescription>
-                  Configuration des paramètres globaux de l'application
+                  Modifier, ajouter ou supprimer tous les éléments de la plateforme
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12">
-                  <Settings className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-600">Paramètres avancés</p>
-                  <p className="text-sm text-gray-400 mt-1">
-                    Configuration des statuts pipeline, secteurs d'activité, et objectifs commerciaux
-                  </p>
+                {/* Sub navigation */}
+                <div className="flex gap-2 mb-6 flex-wrap">
+                  <Button
+                    variant={activeSection === 'comptes' ? 'default' : 'outline'}
+                    onClick={() => setActiveSection('comptes')}
+                    data-testid="section-comptes"
+                  >
+                    Clients / Prospects ({comptes.length})
+                  </Button>
+                  <Button
+                    variant={activeSection === 'opportunites' ? 'default' : 'outline'}
+                    onClick={() => setActiveSection('opportunites')}
+                    data-testid="section-opportunites"
+                  >
+                    Opportunités ({opportunites.length})
+                  </Button>
+                  <Button
+                    variant={activeSection === 'quality' ? 'default' : 'outline'}
+                    onClick={() => setActiveSection('quality')}
+                    data-testid="section-quality"
+                  >
+                    Fiches Qualité ({qualityRecords.length})
+                  </Button>
+                  <Button
+                    variant={activeSection === 'incidents' ? 'default' : 'outline'}
+                    onClick={() => setActiveSection('incidents')}
+                    data-testid="section-incidents"
+                  >
+                    Incidents ({incidents.length})
+                  </Button>
                 </div>
+
+                {/* Comptes Section */}
+                {activeSection === 'comptes' && (
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold">Clients / Prospects</h3>
+                      <Button size="sm" onClick={() => window.location.href = '/comptes'}>
+                        Ajouter un compte
+                      </Button>
+                    </div>
+                    {comptes.length === 0 ? (
+                      <p className="text-gray-500 text-center py-8">Aucun compte</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {comptes.map((compte) => (
+                          <Card key={compte.id} className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-gray-900">{compte.raison_sociale}</h4>
+                                <p className="text-sm text-gray-600">
+                                  {compte.division} • {compte.region} • {compte.ville || 'Ville non renseignée'}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.location.href = `/comptes`}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteCompte(compte.id)}
+                                  data-testid={`delete-compte-${compte.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Opportunites Section */}
+                {activeSection === 'opportunites' && (
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold">Opportunités</h3>
+                      <Button size="sm" onClick={() => window.location.href = '/opportunites'}>
+                        Ajouter une opportunité
+                      </Button>
+                    </div>
+                    {opportunites.length === 0 ? (
+                      <p className="text-gray-500 text-center py-8">Aucune opportunité</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {opportunites.map((opp) => (
+                          <Card key={opp.id} className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-gray-900">{opp.type_besoin || 'Opportunité'}</h4>
+                                <p className="text-sm text-gray-600">
+                                  Statut: {opp.statut} • Montant: {opp.montant_estime ? `${opp.montant_estime}€` : 'Non renseigné'}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.location.href = `/opportunites`}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteOpportunite(opp.id)}
+                                  data-testid={`delete-opp-${opp.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Quality Section */}
+                {activeSection === 'quality' && (
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold">Fiches Qualité</h3>
+                      <Button size="sm" onClick={() => window.location.href = '/qualite'}>
+                        Ajouter une fiche qualité
+                      </Button>
+                    </div>
+                    {qualityRecords.length === 0 ? (
+                      <p className="text-gray-500 text-center py-8">Aucune fiche qualité</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {qualityRecords.map((quality) => (
+                          <Card key={quality.id} className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-gray-900">{quality.periode}</h4>
+                                <p className="text-sm text-gray-600">
+                                  {quality.division} • Taux service: {quality.taux_service || 'N/A'}% • Score: {quality.score_satisfaction || 'N/A'}/9
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.location.href = `/qualite`}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteQuality(quality.id)}
+                                  data-testid={`delete-quality-${quality.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Incidents Section */}
+                {activeSection === 'incidents' && (
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold">Incidents</h3>
+                      <Button size="sm" onClick={() => window.location.href = '/incidents'}>
+                        Ajouter un incident
+                      </Button>
+                    </div>
+                    {incidents.length === 0 ? (
+                      <p className="text-gray-500 text-center py-8">Aucun incident</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {incidents.map((incident) => (
+                          <Card key={incident.id} className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-gray-900">{incident.type}</h4>
+                                <p className="text-sm text-gray-600">
+                                  Gravité: {incident.gravite} • Statut: {incident.statut}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">{incident.description}</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.location.href = `/incidents`}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteIncident(incident.id)}
+                                  data-testid={`delete-incident-${incident.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
