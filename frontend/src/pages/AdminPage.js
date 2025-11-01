@@ -185,12 +185,22 @@ const AdminPage = () => {
     <Layout>
       <div className="p-6 space-y-6" data-testid="admin-page">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <Settings className="h-8 w-8 text-blue-600" />
-            Administration
-          </h1>
-          <p className="text-gray-600 mt-1">Gestion des utilisateurs, textes et paramètres</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <Settings className="h-8 w-8 text-blue-600" />
+              Administration
+            </h1>
+            <p className="text-gray-600 mt-1">Gestion des utilisateurs, textes et paramètres</p>
+          </div>
+          <Button 
+            className="bg-green-600 hover:bg-green-700 text-white"
+            onClick={handleExportData}
+            data-testid="export-data-button"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exporter toutes les données (Excel)
+          </Button>
         </div>
 
         <Tabs defaultValue="translations" className="w-full">
