@@ -499,13 +499,14 @@ async def delete_quality_record(quality_id: str, user: User = Depends(get_curren
     return {'message': 'Fiche qualité et incidents associés supprimés'}
 
 @api_router.post("/incidents", response_model=Incident)
-async def create_incident(data: Incident, user: User = Depends(get_current_user)):
-    incident_dict = data.model_dump()
+async def create_incident(data: IncidentCreate, user: User = Depends(get_current_user)):
+    incident = Incident(**data.model_dump())
+    incident_dict = incident.model_dump()
     incident_dict['created_at'] = incident_dict['created_at'].isoformat()
     if incident_dict.get('closed_at'):
         incident_dict['closed_at'] = incident_dict['closed_at'].isoformat()
     await db.incidents.insert_one(incident_dict)
-    return data
+    return incident
 
 @api_router.get("/incidents", response_model=List[Incident])
 async def get_incidents(user: User = Depends(get_current_user)):
