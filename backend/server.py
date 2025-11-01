@@ -179,6 +179,14 @@ class Incident(BaseModel):
     closed_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class IncidentCreate(BaseModel):
+    quality_record_id: str
+    type: str
+    gravite: str
+    description: str
+    statut: str = "Ouvert"
+    action_corrective: Optional[str] = None
+
 class SurveyResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
