@@ -232,6 +232,63 @@ const AdminPage = () => {
     }
   };
 
+  const handleCreateStatus = async () => {
+    if (!newStatusLabel.trim()) {
+      toast.error('Le libellé du statut est requis');
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('session_token');
+      await axios.post(`${API}/admin/custom-status`, {
+        category: statusCategory,
+        label: newStatusLabel,
+        order: customStatuses[statusCategory].length + 1
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Statut créé avec succès !');
+      setNewStatusLabel('');
+      setStatusDialogOpen(false);
+      fetchData();
+    } catch (error) {
+      console.error('Error creating status:', error);
+      toast.error('Erreur lors de la création');
+    }
+  };
+
+  const handleDeleteStatus = async (statusId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce statut ?')) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('session_token');
+      await axios.delete(`${API}/admin/custom-status/${statusId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Statut supprimé avec succès !');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting status:', error);
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  const handleInitStatuses = async () => {
+    try {
+      const token = localStorage.getItem('session_token');
+      const response = await axios.post(`${API}/admin/custom-status/init`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(response.data.message);
+      fetchData();
+    } catch (error) {
+      console.error('Error initializing statuses:', error);
+      toast.error('Erreur lors de l\'initialisation');
+    }
+  };
+
   const handleCreateTranslation = async (e) => {
     e.preventDefault();
     try {
