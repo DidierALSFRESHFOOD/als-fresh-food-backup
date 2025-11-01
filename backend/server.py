@@ -416,7 +416,7 @@ async def delete_compte(compte_id: str, user: User = Depends(get_current_user)):
 # ==================== OPPORTUNITES ROUTES ====================
 
 @api_router.post("/opportunites", response_model=Opportunite)
-async def create_opportunite(data: Opportunite, user: User = Depends(get_current_user)):
+async def create_opportunite(data: OpportuniteCreate, user: User = Depends(get_current_user)):
     opp = Opportunite(**data.model_dump(), commercial_responsable=user.id)
     opp_dict = opp.model_dump()
     opp_dict['created_at'] = opp_dict['created_at'].isoformat()
