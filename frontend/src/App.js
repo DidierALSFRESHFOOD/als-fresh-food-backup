@@ -136,6 +136,7 @@ function App() {
           <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" />} />
           <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/comptes" element={user ? <ComptesPage /> : <Navigate to="/login" />} />
+          <Route path="/comptes/:id" element={user ? <CompteDetailPage /> : <Navigate to="/login" />} />
           <Route path="/opportunites" element={user ? <OpportunitesPage /> : <Navigate to="/login" />} />
           <Route path="/qualite" element={user ? <QualitePage /> : <Navigate to="/login" />} />
           <Route path="/incidents" element={user ? <IncidentsPage /> : <Navigate to="/login" />} />
