@@ -1,15 +1,18 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Response, Request, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from pydantic import BaseModel, Field, ConfigDict, EmailStr
+from typing import List, Optional, Dict, Any
 import uuid
-from datetime import datetime, timezone
-
+from datetime import datetime, timezone, timedelta
+import bcrypt
+import jwt
+import requests
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -19,54 +22,542 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
-app = FastAPI()
+# JWT Configuration
+JWT_SECRET = os.environ.get('JWT_SECRET', 'als-groupe-frigo-kpi-secret-key-2025')
+JWT_ALGORITHM = 'HS256'
+JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
 
-# Create a router with the /api prefix
+# Emergent Auth Configuration
+EMERGENT_SESSION_API = 'https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data'
+
+# Create the main app
+app = FastAPI(title="ALS GROUPE FRIGO KPI API")
 api_router = APIRouter(prefix="/api")
 
+# ==================== MODELS ====================
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
+class User(BaseModel):
+    model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    email: EmailStr
+    name: str
+    password_hash: Optional[str] = None
+    picture: Optional[str] = None
+    role: str  # Admin_Directeur, Assistante_Direction, Directrice_Clientele, etc.
+    division: Optional[str] = None  # ALS FRESH FOOD / ALS PHARMA
+    region: Optional[str] = None  # IDF / HDF
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+class UserSession(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    user_id: str
+    session_token: str
+    expires_at: datetime
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
-async def root():
-    return {"message": "Hello World"}
+class TranslationKey(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    key: str
+    value: str
+    lang: str = "fr-FR"
+    updated_by: str
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
+class Compte(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    raison_sociale: str
+    division: str  # ALS FRESH FOOD / ALS PHARMA
+    adresse: Optional[str] = None
+    ville: Optional[str] = None
+    code_postal: Optional[str] = None
+    region: str  # IDF / HDF
+    secteur: Optional[str] = None
+    taille: Optional[str] = None  # TPE / PME / enseigne / groupe
+    contact_nom: Optional[str] = None
+    contact_poste: Optional[str] = None
+    contact_email: Optional[EmailStr] = None
+    contact_telephone: Optional[str] = None
+    source: Optional[str] = None
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class Opportunite(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    compte_id: str
+    type_besoin: Optional[str] = None
+    volumes_estimes: Optional[str] = None
+    temperatures: Optional[str] = None
+    frequence: Optional[str] = None
+    marchandises: Optional[str] = None
+    depart: Optional[str] = None
+    arrivee: Optional[str] = None
+    contraintes_horaires: Optional[str] = None
+    urgence: Optional[str] = None
+    commercial_responsable: str
+    date_premier_contact: Optional[datetime] = None
+    canal: Optional[str] = None
+    statut: str = "Prospecté"  # Prospecté, En discussion, Devis envoyé, Négociation, Signé, Perdu
+    montant_estime: Optional[float] = None
+    prochaine_relance: Optional[datetime] = None
+    commentaires: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class QualityRecord(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    compte_id: str
+    division: str
+    region: str
+    periode: str
+    type_prestation: Optional[str] = None
+    taux_service: Optional[float] = None
+    nb_incidents: int = 0
+    score_satisfaction: Optional[float] = None
+    commentaires: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class Incident(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    quality_record_id: str
+    type: str
+    gravite: str  # Faible / Moyen / Critique
+    description: str
+    statut: str = "Ouvert"
+    action_corrective: Optional[str] = None
+    closed_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SurveyResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    compte_id: str
+    division: str
+    periode: str
+    note_globale: Optional[int] = None  # 0-9
+    commentaires: Optional[str] = None
+    submitted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SurveyScore(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    response_id: str
+    theme: str  # Conducteurs, Matériel, Tournées, etc.
+    item_key: str
+    score: int  # 0-9
+
+# ==================== AUTH MODELS ====================
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    role: str = "DevCo_IDF"
+
+class SessionRequest(BaseModel):
+    session_id: str
+
+class TokenResponse(BaseModel):
+    token: str
+    user: dict
+
+# ==================== AUTH HELPER FUNCTIONS ====================
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+
+def create_jwt_token(user_id: str) -> str:
+    payload = {
+        'user_id': user_id,
+        'exp': datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS),
+        'iat': datetime.now(timezone.utc)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+async def get_current_user(request: Request) -> User:
+    # Try cookie first
+    session_token = request.cookies.get('session_token')
     
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
+    # Try Authorization header as fallback
+    if not session_token:
+        auth_header = request.headers.get('Authorization')
+        if auth_header and auth_header.startswith('Bearer '):
+            session_token = auth_header.replace('Bearer ', '')
     
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+    if not session_token:
+        raise HTTPException(status_code=401, detail="Non authentifié")
+    
+    # Try to find user session
+    session_doc = await db.user_sessions.find_one({
+        'session_token': session_token,
+        'expires_at': {'$gt': datetime.now(timezone.utc).isoformat()}
+    })
+    
+    if session_doc:
+        user_doc = await db.users.find_one({'id': session_doc['user_id']}, {'_id': 0})
+        if user_doc:
+            return User(**user_doc)
+    
+    # Try JWT token
+    try:
+        payload = jwt.decode(session_token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_doc = await db.users.find_one({'id': payload['user_id']}, {'_id': 0})
+        if user_doc:
+            return User(**user_doc)
+    except:
+        pass
+    
+    raise HTTPException(status_code=401, detail="Session invalide")
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
+# ==================== AUTH ROUTES ====================
 
-# Include the router in the main app
+@api_router.post("/auth/register", response_model=TokenResponse)
+async def register(data: RegisterRequest):
+    # Check if user exists
+    existing = await db.users.find_one({'email': data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email déjà utilisé")
+    
+    user = User(
+        email=data.email,
+        name=data.name,
+        password_hash=hash_password(data.password),
+        role=data.role
+    )
+    
+    user_dict = user.model_dump()
+    user_dict['created_at'] = user_dict['created_at'].isoformat()
+    await db.users.insert_one(user_dict)
+    
+    token = create_jwt_token(user.id)
+    return TokenResponse(token=token, user=user.model_dump(exclude={'password_hash'}))
+
+@api_router.post("/auth/login", response_model=TokenResponse)
+async def login(data: LoginRequest):
+    user_doc = await db.users.find_one({'email': data.email}, {'_id': 0})
+    if not user_doc or not user_doc.get('password_hash'):
+        raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect")
+    
+    if not verify_password(data.password, user_doc['password_hash']):
+        raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect")
+    
+    user = User(**user_doc)
+    token = create_jwt_token(user.id)
+    return TokenResponse(token=token, user=user.model_dump(exclude={'password_hash'}))
+
+@api_router.post("/auth/google-session")
+async def google_session(data: SessionRequest, response: Response):
+    # Call Emergent Auth API
+    try:
+        resp = requests.get(
+            EMERGENT_SESSION_API,
+            headers={'X-Session-ID': data.session_id},
+            timeout=10
+        )
+        resp.raise_for_status()
+        session_data = resp.json()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erreur authentification Google: {str(e)}")
+    
+    # Check if user exists
+    user_doc = await db.users.find_one({'email': session_data['email']}, {'_id': 0})
+    
+    if not user_doc:
+        # Create new user
+        user = User(
+            email=session_data['email'],
+            name=session_data['name'],
+            picture=session_data.get('picture'),
+            role='DevCo_IDF'  # Default role
+        )
+        user_dict = user.model_dump()
+        user_dict['created_at'] = user_dict['created_at'].isoformat()
+        await db.users.insert_one(user_dict)
+    else:
+        user = User(**user_doc)
+    
+    # Create session
+    session = UserSession(
+        user_id=user.id,
+        session_token=session_data['session_token'],
+        expires_at=datetime.now(timezone.utc) + timedelta(days=7)
+    )
+    
+    session_dict = session.model_dump()
+    session_dict['expires_at'] = session_dict['expires_at'].isoformat()
+    session_dict['created_at'] = session_dict['created_at'].isoformat()
+    await db.user_sessions.insert_one(session_dict)
+    
+    # Set cookie
+    response.set_cookie(
+        key='session_token',
+        value=session_data['session_token'],
+        httponly=True,
+        secure=True,
+        samesite='none',
+        max_age=7 * 24 * 60 * 60,
+        path='/'
+    )
+    
+    return {'user': user.model_dump(exclude={'password_hash'}), 'session_token': session_data['session_token']}
+
+@api_router.get("/auth/me")
+async def get_me(user: User = Depends(get_current_user)):
+    return user.model_dump(exclude={'password_hash'})
+
+@api_router.post("/auth/logout")
+async def logout(response: Response, request: Request):
+    session_token = request.cookies.get('session_token')
+    if session_token:
+        await db.user_sessions.delete_many({'session_token': session_token})
+    response.delete_cookie('session_token', path='/')
+    return {'message': 'Déconnexion réussie'}
+
+# ==================== COMPTES ROUTES ====================
+
+@api_router.post("/comptes", response_model=Compte)
+async def create_compte(data: Compte, user: User = Depends(get_current_user)):
+    compte = Compte(**data.model_dump(), created_by=user.id)
+    compte_dict = compte.model_dump()
+    compte_dict['created_at'] = compte_dict['created_at'].isoformat()
+    await db.comptes.insert_one(compte_dict)
+    return compte
+
+@api_router.get("/comptes", response_model=List[Compte])
+async def get_comptes(user: User = Depends(get_current_user)):
+    query = {}
+    if user.region and user.role not in ['Admin_Directeur', 'Assistante_Direction']:
+        query['region'] = user.region
+    
+    comptes = await db.comptes.find(query, {'_id': 0}).to_list(1000)
+    for c in comptes:
+        if isinstance(c.get('created_at'), str):
+            c['created_at'] = datetime.fromisoformat(c['created_at'])
+    return comptes
+
+@api_router.get("/comptes/{compte_id}", response_model=Compte)
+async def get_compte(compte_id: str, user: User = Depends(get_current_user)):
+    compte = await db.comptes.find_one({'id': compte_id}, {'_id': 0})
+    if not compte:
+        raise HTTPException(status_code=404, detail="Compte non trouvé")
+    if isinstance(compte.get('created_at'), str):
+        compte['created_at'] = datetime.fromisoformat(compte['created_at'])
+    return Compte(**compte)
+
+# ==================== OPPORTUNITES ROUTES ====================
+
+@api_router.post("/opportunites", response_model=Opportunite)
+async def create_opportunite(data: Opportunite, user: User = Depends(get_current_user)):
+    opp = Opportunite(**data.model_dump(), commercial_responsable=user.id)
+    opp_dict = opp.model_dump()
+    opp_dict['created_at'] = opp_dict['created_at'].isoformat()
+    if opp_dict.get('date_premier_contact'):
+        opp_dict['date_premier_contact'] = opp_dict['date_premier_contact'].isoformat()
+    if opp_dict.get('prochaine_relance'):
+        opp_dict['prochaine_relance'] = opp_dict['prochaine_relance'].isoformat()
+    await db.opportunites.insert_one(opp_dict)
+    return opp
+
+@api_router.get("/opportunites", response_model=List[Opportunite])
+async def get_opportunites(user: User = Depends(get_current_user)):
+    query = {}
+    if user.role in ['DevCo_IDF', 'DevCo_HDF']:
+        query['commercial_responsable'] = user.id
+    
+    opps = await db.opportunites.find(query, {'_id': 0}).to_list(1000)
+    for o in opps:
+        if isinstance(o.get('created_at'), str):
+            o['created_at'] = datetime.fromisoformat(o['created_at'])
+        if o.get('date_premier_contact') and isinstance(o['date_premier_contact'], str):
+            o['date_premier_contact'] = datetime.fromisoformat(o['date_premier_contact'])
+        if o.get('prochaine_relance') and isinstance(o['prochaine_relance'], str):
+            o['prochaine_relance'] = datetime.fromisoformat(o['prochaine_relance'])
+    return opps
+
+# ==================== QUALITY ROUTES ====================
+
+@api_router.post("/quality", response_model=QualityRecord)
+async def create_quality_record(data: QualityRecord, user: User = Depends(get_current_user)):
+    record_dict = data.model_dump()
+    record_dict['created_at'] = record_dict['created_at'].isoformat()
+    await db.quality_records.insert_one(record_dict)
+    return data
+
+@api_router.get("/quality", response_model=List[QualityRecord])
+async def get_quality_records(user: User = Depends(get_current_user)):
+    records = await db.quality_records.find({}, {'_id': 0}).to_list(1000)
+    for r in records:
+        if isinstance(r.get('created_at'), str):
+            r['created_at'] = datetime.fromisoformat(r['created_at'])
+    return records
+
+@api_router.post("/incidents", response_model=Incident)
+async def create_incident(data: Incident, user: User = Depends(get_current_user)):
+    incident_dict = data.model_dump()
+    incident_dict['created_at'] = incident_dict['created_at'].isoformat()
+    if incident_dict.get('closed_at'):
+        incident_dict['closed_at'] = incident_dict['closed_at'].isoformat()
+    await db.incidents.insert_one(incident_dict)
+    return data
+
+@api_router.get("/incidents", response_model=List[Incident])
+async def get_incidents(user: User = Depends(get_current_user)):
+    incidents = await db.incidents.find({}, {'_id': 0}).to_list(1000)
+    for i in incidents:
+        if isinstance(i.get('created_at'), str):
+            i['created_at'] = datetime.fromisoformat(i['created_at'])
+        if i.get('closed_at') and isinstance(i['closed_at'], str):
+            i['closed_at'] = datetime.fromisoformat(i['closed_at'])
+    return incidents
+
+# ==================== SURVEY ROUTES ====================
+
+@api_router.post("/surveys/responses", response_model=SurveyResponse)
+async def create_survey_response(data: SurveyResponse):
+    response_dict = data.model_dump()
+    response_dict['submitted_at'] = response_dict['submitted_at'].isoformat()
+    await db.survey_responses.insert_one(response_dict)
+    return data
+
+@api_router.post("/surveys/scores", response_model=SurveyScore)
+async def create_survey_score(data: SurveyScore):
+    await db.survey_scores.insert_one(data.model_dump())
+    return data
+
+@api_router.get("/surveys/responses", response_model=List[SurveyResponse])
+async def get_survey_responses(user: User = Depends(get_current_user)):
+    responses = await db.survey_responses.find({}, {'_id': 0}).to_list(1000)
+    for r in responses:
+        if isinstance(r.get('submitted_at'), str):
+            r['submitted_at'] = datetime.fromisoformat(r['submitted_at'])
+    return responses
+
+# ==================== DASHBOARD ROUTES ====================
+
+@api_router.get("/dashboard/stats")
+async def get_dashboard_stats(user: User = Depends(get_current_user)):
+    # Commercial Stats
+    total_comptes = await db.comptes.count_documents({})
+    total_opps = await db.opportunites.count_documents({})
+    opps_signees = await db.opportunites.count_documents({'statut': 'Signé'})
+    
+    # Calculate CA signé
+    pipeline = [
+        {'$match': {'statut': 'Signé'}},
+        {'$group': {'_id': None, 'total': {'$sum': '$montant_estime'}}}
+    ]
+    ca_result = await db.opportunites.aggregate(pipeline).to_list(1)
+    ca_signe = ca_result[0]['total'] if ca_result and ca_result[0]['total'] else 0
+    
+    # Quality Stats
+    total_quality = await db.quality_records.count_documents({})
+    total_incidents = await db.incidents.count_documents({})
+    incidents_ouverts = await db.incidents.count_documents({'statut': 'Ouvert'})
+    
+    # Average satisfaction
+    satisfaction_pipeline = [
+        {'$group': {'_id': None, 'avg': {'$avg': '$score_satisfaction'}}}
+    ]
+    satisfaction_result = await db.quality_records.aggregate(satisfaction_pipeline).to_list(1)
+    avg_satisfaction = satisfaction_result[0]['avg'] if satisfaction_result and satisfaction_result[0]['avg'] else 0
+    
+    return {
+        'commercial': {
+            'total_comptes': total_comptes,
+            'total_opportunites': total_opps,
+            'opportunites_signees': opps_signees,
+            'ca_signe': round(ca_signe, 2)
+        },
+        'qualite': {
+            'total_quality_records': total_quality,
+            'total_incidents': total_incidents,
+            'incidents_ouverts': incidents_ouverts,
+            'score_satisfaction_moyen': round(avg_satisfaction, 1) if avg_satisfaction else 0
+        }
+    }
+
+# ==================== ADMIN ROUTES ====================
+
+@api_router.get("/admin/users", response_model=List[User])
+async def get_all_users(user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    users = await db.users.find({}, {'_id': 0}).to_list(1000)
+    for u in users:
+        if isinstance(u.get('created_at'), str):
+            u['created_at'] = datetime.fromisoformat(u['created_at'])
+    return users
+
+@api_router.post("/admin/users", response_model=User)
+async def create_user_admin(data: User, user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    existing = await db.users.find_one({'email': data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email déjà utilisé")
+    
+    new_user = User(**data.model_dump())
+    user_dict = new_user.model_dump()
+    user_dict['created_at'] = user_dict['created_at'].isoformat()
+    await db.users.insert_one(user_dict)
+    return new_user
+
+@api_router.get("/admin/translations", response_model=List[TranslationKey])
+async def get_translations(user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    translations = await db.translation_keys.find({}, {'_id': 0}).to_list(1000)
+    for t in translations:
+        if isinstance(t.get('updated_at'), str):
+            t['updated_at'] = datetime.fromisoformat(t['updated_at'])
+    return translations
+
+@api_router.post("/admin/translations", response_model=TranslationKey)
+async def create_translation(data: TranslationKey, user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    translation = TranslationKey(**data.model_dump(), updated_by=user.id)
+    trans_dict = translation.model_dump()
+    trans_dict['updated_at'] = trans_dict['updated_at'].isoformat()
+    await db.translation_keys.insert_one(trans_dict)
+    return translation
+
+@api_router.put("/admin/translations/{key_id}", response_model=TranslationKey)
+async def update_translation(key_id: str, data: dict, user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    data['updated_by'] = user.id
+    data['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.translation_keys.update_one(
+        {'id': key_id},
+        {'$set': data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Clé de traduction non trouvée")
+    
+    updated = await db.translation_keys.find_one({'id': key_id}, {'_id': 0})
+    if isinstance(updated.get('updated_at'), str):
+        updated['updated_at'] = datetime.fromisoformat(updated['updated_at'])
+    return TranslationKey(**updated)
+
+# Include router
 app.include_router(api_router)
 
 app.add_middleware(
@@ -77,7 +568,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

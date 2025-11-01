@@ -1,34 +1,130 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* ALS GROUPE - FRIGO KPI Custom Styles */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
+* {
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+.bg-truck-pattern {
+  background-image: url('https://customer-assets.emergentagent.com/job_logistikpi/artifacts/6kejowt4_ALS%20v%C3%A9hicule%20IVECO%203T5.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+.bg-truck-overlay {
+  position: relative;
 }
 
-.App-link {
-    color: #61dafb;
+.bg-truck-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('https://customer-assets.emergentagent.com/job_logistikpi/artifacts/6kejowt4_ALS%20v%C3%A9hicule%20IVECO%203T5.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.08;
+  z-index: 0;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.content-overlay {
+  position: relative;
+  z-index: 1;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-als-primary {
+  background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-als-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+}
+
+.stat-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-link {
+  transition: background-color 0.2s ease, padding-left 0.2s ease;
+}
+
+.sidebar-link:hover {
+  background-color: rgba(37, 99, 235, 0.1);
+  padding-left: 1.5rem;
+}
+
+.sidebar-link.active {
+  background-color: rgba(37, 99, 235, 0.15);
+  border-left: 4px solid #2563EB;
+  padding-left: 1.25rem;
+}
+
+/* Smooth animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Table styles */
+.table-hover tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+/* Status badges */
+.badge-prospected {
+  background-color: #E0E7FF;
+  color: #3730A3;
+}
+
+.badge-discussion {
+  background-color: #DBEAFE;
+  color: #1E40AF;
+}
+
+.badge-devis {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.badge-negociation {
+  background-color: #FED7AA;
+  color: #9A3412;
+}
+
+.badge-signe {
+  background-color: #D1FAE5;
+  color: #065F46;
+}
+
+.badge-perdu {
+  background-color: #FEE2E2;
+  color: #991B1B;
 }
