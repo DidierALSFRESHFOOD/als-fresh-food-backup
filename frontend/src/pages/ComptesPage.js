@@ -43,10 +43,12 @@ const ComptesPage = () => {
   const fetchComptes = async () => {
     try {
       const token = localStorage.getItem('session_token');
-      const response = await axios.get(`${API}/comptes`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setComptes(response.data);
+      const [comptesRes, usersRes] = await Promise.all([
+        axios.get(`${API}/comptes`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/admin/users`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] }))
+      ]);
+      setComptes(comptesRes.data);
+      setUsers(usersRes.data);
     } catch (error) {
       console.error('Error fetching comptes:', error);
       toast.error('Erreur lors du chargement des comptes');
