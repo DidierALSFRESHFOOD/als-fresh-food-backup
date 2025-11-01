@@ -17,9 +17,14 @@ const API = `${BACKEND_URL}/api`;
 const AdminPage = () => {
   const [translations, setTranslations] = useState([]);
   const [users, setUsers] = useState([]);
+  const [comptes, setComptes] = useState([]);
+  const [opportunites, setOpportunites] = useState([]);
+  const [qualityRecords, setQualityRecords] = useState([]);
+  const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [translationDialogOpen, setTranslationDialogOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('comptes');
   
   const [userFormData, setUserFormData] = useState({
     email: '',
