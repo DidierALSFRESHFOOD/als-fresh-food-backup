@@ -596,13 +596,10 @@ async def init_translations(user: User = Depends(get_current_user)):
     # Default translations for the app
     default_translations = [
         {'key': 'app.title', 'value': 'Suivi Activité Commerciale', 'lang': 'fr-FR'},
-        {'key': 'app.subtitle', 'value': 'ALS FRESH FOOD • ALS PHARMA', 'lang': 'fr-FR'},
-        {'key': 'login.title', 'value': 'Connexion', 'lang': 'fr-FR'},
         {'key': 'login.description', 'value': 'Accédez à votre espace commercial et qualité', 'lang': 'fr-FR'},
         {'key': 'login.email', 'value': 'Email', 'lang': 'fr-FR'},
         {'key': 'login.password', 'value': 'Mot de passe', 'lang': 'fr-FR'},
         {'key': 'login.submit', 'value': 'Se connecter', 'lang': 'fr-FR'},
-        {'key': 'login.google', 'value': 'Continuer avec Google', 'lang': 'fr-FR'},
         {'key': 'nav.dashboard', 'value': 'Tableau de bord', 'lang': 'fr-FR'},
         {'key': 'nav.comptes', 'value': 'Clients / Prospects', 'lang': 'fr-FR'},
         {'key': 'nav.opportunites', 'value': 'Opportunités', 'lang': 'fr-FR'},
