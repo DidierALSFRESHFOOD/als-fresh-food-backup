@@ -156,6 +156,17 @@ class QualityRecord(BaseModel):
     commentaires: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class QualityRecordCreate(BaseModel):
+    compte_id: str
+    division: str
+    region: str
+    periode: str
+    type_prestation: Optional[str] = None
+    taux_service: Optional[float] = None
+    nb_incidents: int = 0
+    score_satisfaction: Optional[float] = None
+    commentaires: Optional[str] = None
+
 class Incident(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
