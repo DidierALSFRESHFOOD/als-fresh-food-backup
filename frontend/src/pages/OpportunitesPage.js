@@ -388,43 +388,129 @@ const OpportunitesPage = () => {
           <div className="grid grid-cols-1 gap-4">
             {opportunites.map((opp) => {
               const compte = getCompteById(opp.compte_id);
+              const isEditing = editingId === opp.id;
+              const editable = canEdit(opp);
+              
               return (
                 <Card key={opp.id} className="hover:shadow-lg transition-shadow" data-testid={`opportunite-card-${opp.id}`}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      <div>
+                      <div className="flex-1">
                         <CardTitle className="text-lg flex items-center gap-2">
                           <TrendingUp className="h-5 w-5 text-blue-600" />
                           {compte?.raison_sociale || 'Client non trouvé'}
                         </CardTitle>
-                        <p className="text-sm text-gray-600 mt-1">{opp.type_besoin}</p>
+                        {!isEditing && (
+                          <p className="text-sm text-gray-600 mt-1">{opp.type_besoin}</p>
+                        )}
                       </div>
-                      <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusBadge(opp.statut)}`}>
-                        {opp.statut}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {!isEditing && (
+                          <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusBadge(opp.statut)}`}>
+                            {opp.statut}
+                          </span>
+                        )}
+                        {editable && !isEditing && (
+                          <Button size="sm" variant="outline" onClick={() => handleEditStart(opp)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {isEditing && (
+                          <>
+                            <Button size="sm" onClick={() => handleEditSave(opp.id)} className="btn-als-primary">
+                              <Save className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      {opp.montant_estime && (
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-green-600" />
-                          <span className="font-semibold text-green-700">
-                            {opp.montant_estime.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
-                          </span>
+                    {isEditing ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs">Type besoin</Label>
+                            <Input
+                              value={editData.type_besoin}
+                              onChange={(e) => setEditData({ ...editData, type_besoin: e.target.value })}
+                              className="h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Statut</Label>
+                            <Select
+                              value={editData.statut}
+                              onValueChange={(value) => setEditData({ ...editData, statut: value })}
+                            >
+                              <SelectTrigger className="h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Prospecté">Prospecté</SelectItem>
+                                <SelectItem value="En discussion">En discussion</SelectItem>
+                                <SelectItem value="Devis envoyé">Devis envoyé</SelectItem>
+                                <SelectItem value="Négociation">Négociation</SelectItem>
+                                <SelectItem value="Signé">Signé</SelectItem>
+                                <SelectItem value="Perdu">Perdu</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label className="text-xs">Montant (€)</Label>
+                            <Input
+                              type="number"
+                              value={editData.montant_estime}
+                              onChange={(e) => setEditData({ ...editData, montant_estime: e.target.value })}
+                              className="h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Canal</Label>
+                            <Input
+                              value={editData.canal}
+                              onChange={(e) => setEditData({ ...editData, canal: e.target.value })}
+                              className="h-8"
+                            />
+                          </div>
                         </div>
-                      )}
-                      <div className="text-gray-600">
-                        <span className="font-medium">Canal:</span> {opp.canal}
+                        <div>
+                          <Label className="text-xs">Commentaires</Label>
+                          <Textarea
+                            value={editData.commentaires}
+                            onChange={(e) => setEditData({ ...editData, commentaires: e.target.value })}
+                            rows={2}
+                            className="text-sm"
+                          />
+                        </div>
                       </div>
-                      <div className="text-gray-600">
-                        <span className="font-medium">Urgence:</span> {opp.urgence}
-                      </div>
-                    </div>
-                    {opp.commentaires && (
-                      <p className="text-sm text-gray-600 mt-3 border-t pt-3">
-                        {opp.commentaires}
-                      </p>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          {opp.montant_estime && (
+                            <div className="flex items-center gap-2">
+                              <DollarSign className="h-4 w-4 text-green-600" />
+                              <span className="font-semibold text-green-700">
+                                {opp.montant_estime.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                              </span>
+                            </div>
+                          )}
+                          <div className="text-gray-600">
+                            <span className="font-medium">Canal:</span> {opp.canal}
+                          </div>
+                          <div className="text-gray-600">
+                            <span className="font-medium">Urgence:</span> {opp.urgence}
+                          </div>
+                        </div>
+                        {opp.commentaires && (
+                          <p className="text-sm text-gray-600 mt-3 border-t pt-3">
+                            {opp.commentaires}
+                          </p>
+                        )}
+                      </>
                     )}
                   </CardContent>
                 </Card>
