@@ -111,6 +111,49 @@ const OpportunitesPage = () => {
 
   const getCompteById = (id) => comptes.find(c => c.id === id);
 
+  const handleEditStart = (opp) => {
+    setEditingId(opp.id);
+    setEditData({
+      compte_id: opp.compte_id,
+      type_besoin: opp.type_besoin || '',
+      volumes_estimes: opp.volumes_estimes || '',
+      temperatures: opp.temperatures || '',
+      frequence: opp.frequence || '',
+      marchandises: opp.marchandises || '',
+      depart: opp.depart || '',
+      arrivee: opp.arrivee || '',
+      contraintes_horaires: opp.contraintes_horaires || '',
+      urgence: opp.urgence || '',
+      canal: opp.canal || '',
+      statut: opp.statut,
+      montant_estime: opp.montant_estime || '',
+      commentaires: opp.commentaires || ''
+    });
+  };
+
+  const handleEditSave = async (oppId) => {
+    try {
+      const token = localStorage.getItem('session_token');
+      const payload = {
+        ...editData,
+        montant_estime: editData.montant_estime ? parseFloat(editData.montant_estime) : null
+      };
+      await axios.put(`${API}/opportunites/${oppId}`, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Opportunité modifiée avec succès !');
+      setEditingId(null);
+      fetchData();
+    } catch (error) {
+      console.error('Error updating opportunite:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors de la modification');
+    }
+  };
+
+  const canEdit = (opp) => {
+    return user && (opp.commercial_responsable === user.id || user.role === 'Admin_Directeur');
+  };
+
   return (
     <Layout>
       <div className="p-6 space-y-6" data-testid="opportunites-page">
