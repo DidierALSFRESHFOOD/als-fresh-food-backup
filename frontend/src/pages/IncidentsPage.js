@@ -16,10 +16,13 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const IncidentsPage = () => {
+  const { user } = useContext(AuthContext);
   const [incidents, setIncidents] = useState([]);
   const [qualityRecords, setQualityRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
   const [formData, setFormData] = useState({
     quality_record_id: '',
     type: 'Retard',
