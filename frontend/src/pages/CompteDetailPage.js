@@ -18,11 +18,14 @@ const API = `${BACKEND_URL}/api`;
 const CompteDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const [compte, setCompte] = useState(null);
   const [creator, setCreator] = useState(null);
   const [opportunites, setOpportunites] = useState([]);
   const [qualityRecords, setQualityRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editData, setEditData] = useState({});
 
   useEffect(() => {
     fetchCompteDetails();
