@@ -318,6 +318,152 @@ const CompteDetailPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifier la Fiche</DialogTitle>
+            <DialogDescription>
+              Modifier les informations du client/prospect
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-raison-sociale">Raison Sociale *</Label>
+              <Input
+                id="edit-raison-sociale"
+                value={editData.raison_sociale}
+                onChange={(e) => setEditData({ ...editData, raison_sociale: e.target.value })}
+                data-testid="edit-raison-sociale"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Division *</Label>
+                <Select
+                  value={editData.division}
+                  onValueChange={(value) => setEditData({ ...editData, division: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALS FRESH FOOD">ALS FRESH FOOD</SelectItem>
+                    <SelectItem value="ALS PHARMA">ALS PHARMA</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Région *</Label>
+                <Select
+                  value={editData.region}
+                  onValueChange={(value) => setEditData({ ...editData, region: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="IDF">Île-de-France</SelectItem>
+                    <SelectItem value="HDF">Hauts-de-France</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Adresse</Label>
+              <Input
+                value={editData.adresse}
+                onChange={(e) => setEditData({ ...editData, adresse: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Ville</Label>
+                <Input
+                  value={editData.ville}
+                  onChange={(e) => setEditData({ ...editData, ville: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Code Postal</Label>
+                <Input
+                  value={editData.code_postal}
+                  onChange={(e) => setEditData({ ...editData, code_postal: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Secteur</Label>
+                <Input
+                  value={editData.secteur}
+                  onChange={(e) => setEditData({ ...editData, secteur: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Taille</Label>
+                <Select
+                  value={editData.taille}
+                  onValueChange={(value) => setEditData({ ...editData, taille: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TPE">TPE</SelectItem>
+                    <SelectItem value="PME">PME</SelectItem>
+                    <SelectItem value="Enseigne">Enseigne</SelectItem>
+                    <SelectItem value="Groupe">Groupe</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="border-t pt-4">
+              <h3 className="font-semibold mb-3">Contact Principal</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Nom</Label>
+                  <Input
+                    value={editData.contact_nom}
+                    onChange={(e) => setEditData({ ...editData, contact_nom: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Poste</Label>
+                  <Input
+                    value={editData.contact_poste}
+                    onChange={(e) => setEditData({ ...editData, contact_poste: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    value={editData.contact_email}
+                    onChange={(e) => setEditData({ ...editData, contact_email: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Téléphone</Label>
+                  <Input
+                    value={editData.contact_telephone}
+                    onChange={(e) => setEditData({ ...editData, contact_telephone: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2 pt-4">
+              <Button onClick={handleSaveEdit} className="flex-1 btn-als-primary" data-testid="save-edit-button">
+                Enregistrer
+              </Button>
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)} className="flex-1">
+                Annuler
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
