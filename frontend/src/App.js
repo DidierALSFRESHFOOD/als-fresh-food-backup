@@ -140,7 +140,6 @@ function App() {
           <Route path="/opportunites" element={user ? <OpportunitesPage /> : <Navigate to="/login" />} />
           <Route path="/qualite" element={user ? <QualitePage /> : <Navigate to="/login" />} />
           <Route path="/incidents" element={user ? <IncidentsPage /> : <Navigate to="/login" />} />
-          <Route path="/satisfaction" element={user ? <SatisfactionPage /> : <Navigate to="/login" />} />
           <Route path="/admin" element={user?.role === 'Admin_Directeur' ? <AdminPage /> : <Navigate to="/" />} />
         </Routes>
         <Toaster position="top-right" richColors />
