@@ -496,12 +496,13 @@ async def delete_opportunite(opp_id: str, user: User = Depends(get_current_user)
 
 @api_router.put("/opportunites/{opp_id}", response_model=Opportunite)
 async def update_opportunite(opp_id: str, data: OpportuniteCreate, user: User = Depends(get_current_user)):
-    if user.role != 'Admin_Directeur':
-        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
-    
     existing = await db.opportunites.find_one({'id': opp_id}, {'_id': 0})
     if not existing:
         raise HTTPException(status_code=404, detail="Opportunité non trouvée")
+    
+    # Check permissions: owner or admin
+    if existing['commercial_responsable'] != user.id and user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Vous ne pouvez modifier que vos propres opportunités")
     
     update_data = data.model_dump(exclude_unset=True)
     update_data['id'] = opp_id
