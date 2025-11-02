@@ -558,12 +558,14 @@ async def delete_quality_record(quality_id: str, user: User = Depends(get_curren
 
 @api_router.put("/quality/{quality_id}", response_model=QualityRecord)
 async def update_quality_record(quality_id: str, data: QualityRecordCreate, user: User = Depends(get_current_user)):
-    if user.role != 'Admin_Directeur':
-        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
-    
     existing = await db.quality_records.find_one({'id': quality_id}, {'_id': 0})
     if not existing:
         raise HTTPException(status_code=404, detail="Fiche qualité non trouvée")
+    
+    # Quality records can be edited by Clientele roles and Admin
+    allowed_roles = ['Admin_Directeur', 'Directrice_Clientele', 'Assistante_Clientele']
+    if user.role not in allowed_roles:
+        raise HTTPException(status_code=403, detail="Accès réservé au service clientèle")
     
     update_data = data.model_dump(exclude_unset=True)
     update_data['id'] = quality_id
