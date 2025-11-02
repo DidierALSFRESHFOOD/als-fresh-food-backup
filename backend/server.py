@@ -493,6 +493,38 @@ async def delete_opportunite(opp_id: str, user: User = Depends(get_current_user)
         raise HTTPException(status_code=404, detail="Opportunité non trouvée")
     return {'message': 'Opportunité supprimée'}
 
+@api_router.put("/opportunites/{opp_id}", response_model=Opportunite)
+async def update_opportunite(opp_id: str, data: OpportuniteCreate, user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    existing = await db.opportunites.find_one({'id': opp_id}, {'_id': 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Opportunité non trouvée")
+    
+    update_data = data.model_dump(exclude_unset=True)
+    update_data['id'] = opp_id
+    update_data['commercial_responsable'] = existing['commercial_responsable']
+    update_data['created_at'] = existing['created_at']
+    
+    # Handle datetime fields
+    if update_data.get('date_premier_contact') and isinstance(update_data['date_premier_contact'], datetime):
+        update_data['date_premier_contact'] = update_data['date_premier_contact'].isoformat()
+    if update_data.get('prochaine_relance') and isinstance(update_data['prochaine_relance'], datetime):
+        update_data['prochaine_relance'] = update_data['prochaine_relance'].isoformat()
+    
+    await db.opportunites.update_one({'id': opp_id}, {'$set': update_data})
+    
+    updated = await db.opportunites.find_one({'id': opp_id}, {'_id': 0})
+    if isinstance(updated.get('created_at'), str):
+        updated['created_at'] = datetime.fromisoformat(updated['created_at'])
+    if updated.get('date_premier_contact') and isinstance(updated['date_premier_contact'], str):
+        updated['date_premier_contact'] = datetime.fromisoformat(updated['date_premier_contact'])
+    if updated.get('prochaine_relance') and isinstance(updated['prochaine_relance'], str):
+        updated['prochaine_relance'] = datetime.fromisoformat(updated['prochaine_relance'])
+    
+    return Opportunite(**updated)
+
 # ==================== QUALITY ROUTES ====================
 
 @api_router.post("/quality", response_model=QualityRecord)
