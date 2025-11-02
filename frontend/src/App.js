@@ -13,7 +13,6 @@ import CompteDetailPage from '@/pages/CompteDetailPage';
 import OpportunitesPage from '@/pages/OpportunitesPage';
 import QualitePage from '@/pages/QualitePage';
 import IncidentsPage from '@/pages/IncidentsPage';
-import SatisfactionPage from '@/pages/SatisfactionPage';
 import AdminPage from '@/pages/AdminPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
