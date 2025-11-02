@@ -608,12 +608,14 @@ async def delete_incident(incident_id: str, user: User = Depends(get_current_use
 
 @api_router.put("/incidents/{incident_id}", response_model=Incident)
 async def update_incident(incident_id: str, data: IncidentCreate, user: User = Depends(get_current_user)):
-    if user.role != 'Admin_Directeur':
-        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
-    
     existing = await db.incidents.find_one({'id': incident_id}, {'_id': 0})
     if not existing:
         raise HTTPException(status_code=404, detail="Incident non trouvé")
+    
+    # Incidents can be edited by Clientele roles and Admin
+    allowed_roles = ['Admin_Directeur', 'Directrice_Clientele', 'Assistante_Clientele']
+    if user.role not in allowed_roles:
+        raise HTTPException(status_code=403, detail="Accès réservé au service clientèle")
     
     update_data = data.model_dump(exclude_unset=True)
     update_data['id'] = incident_id
