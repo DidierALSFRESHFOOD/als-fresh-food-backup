@@ -58,6 +58,42 @@ const CompteDetailPage = () => {
     }
   };
 
+  const handleEdit = () => {
+    setEditData({
+      raison_sociale: compte.raison_sociale,
+      division: compte.division,
+      region: compte.region,
+      adresse: compte.adresse || '',
+      ville: compte.ville || '',
+      code_postal: compte.code_postal || '',
+      secteur: compte.secteur || '',
+      taille: compte.taille || '',
+      contact_nom: compte.contact_nom || '',
+      contact_poste: compte.contact_poste || '',
+      contact_email: compte.contact_email || '',
+      contact_telephone: compte.contact_telephone || '',
+      source: compte.source || ''
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const token = localStorage.getItem('session_token');
+      await axios.put(`${API}/comptes/${id}`, editData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Fiche modifiée avec succès !');
+      setEditDialogOpen(false);
+      fetchCompteDetails();
+    } catch (error) {
+      console.error('Error updating compte:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors de la modification');
+    }
+  };
+
+  const canEdit = user && (compte?.created_by === user.id || user.role === 'Admin_Directeur');
+
   if (loading) {
     return (
       <Layout>
