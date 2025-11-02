@@ -118,15 +118,23 @@ const CompteDetailPage = () => {
     <Layout>
       <div className="p-6 space-y-6" data-testid="compte-detail-page">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={() => navigate('/comptes')} data-testid="back-button">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{compte.raison_sociale}</h1>
-            <p className="text-gray-600 mt-1">Fiche Client / Prospect</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" onClick={() => navigate('/comptes')} data-testid="back-button">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">{compte.raison_sociale}</h1>
+              <p className="text-gray-600 mt-1">Fiche Client / Prospect</p>
+            </div>
           </div>
+          {canEdit && (
+            <Button className="btn-als-primary" onClick={handleEdit} data-testid="edit-compte-button">
+              <Edit className="h-4 w-4 mr-2" />
+              Modifier
+            </Button>
+          )}
         </div>
 
         {/* Main Info Card */}
