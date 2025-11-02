@@ -27,7 +27,6 @@ const Layout = ({ children }) => {
     { name: 'Opportunités', href: '/opportunites', icon: TrendingUp, roles: ['all'] },
     { name: 'Qualité Service', href: '/qualite', icon: Star, roles: ['all'] },
     { name: 'Incidents', href: '/incidents', icon: AlertTriangle, roles: ['all'] },
-    { name: 'Satisfaction', href: '/satisfaction', icon: MessageSquare, roles: ['all'] },
     { 
       name: 'Administration', 
       href: '/admin', 
