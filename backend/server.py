@@ -602,6 +602,33 @@ async def delete_incident(incident_id: str, user: User = Depends(get_current_use
         raise HTTPException(status_code=404, detail="Incident non trouvé")
     return {'message': 'Incident supprimé'}
 
+@api_router.put("/incidents/{incident_id}", response_model=Incident)
+async def update_incident(incident_id: str, data: IncidentCreate, user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    existing = await db.incidents.find_one({'id': incident_id}, {'_id': 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Incident non trouvé")
+    
+    update_data = data.model_dump(exclude_unset=True)
+    update_data['id'] = incident_id
+    update_data['created_at'] = existing['created_at']
+    
+    # Handle closed_at if status changed to Clos
+    if update_data.get('statut') in ['Clos', 'Résolu'] and not existing.get('closed_at'):
+        update_data['closed_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.incidents.update_one({'id': incident_id}, {'$set': update_data})
+    
+    updated = await db.incidents.find_one({'id': incident_id}, {'_id': 0})
+    if isinstance(updated.get('created_at'), str):
+        updated['created_at'] = datetime.fromisoformat(updated['created_at'])
+    if updated.get('closed_at') and isinstance(updated['closed_at'], str):
+        updated['closed_at'] = datetime.fromisoformat(updated['closed_at'])
+    
+    return Incident(**updated)
+
 # ==================== SURVEY ROUTES ====================
 
 @api_router.post("/surveys/responses", response_model=SurveyResponse)
