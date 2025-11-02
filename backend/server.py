@@ -554,6 +554,27 @@ async def delete_quality_record(quality_id: str, user: User = Depends(get_curren
     
     return {'message': 'Fiche qualité et incidents associés supprimés'}
 
+@api_router.put("/quality/{quality_id}", response_model=QualityRecord)
+async def update_quality_record(quality_id: str, data: QualityRecordCreate, user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    existing = await db.quality_records.find_one({'id': quality_id}, {'_id': 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Fiche qualité non trouvée")
+    
+    update_data = data.model_dump(exclude_unset=True)
+    update_data['id'] = quality_id
+    update_data['created_at'] = existing['created_at']
+    
+    await db.quality_records.update_one({'id': quality_id}, {'$set': update_data})
+    
+    updated = await db.quality_records.find_one({'id': quality_id}, {'_id': 0})
+    if isinstance(updated.get('created_at'), str):
+        updated['created_at'] = datetime.fromisoformat(updated['created_at'])
+    
+    return QualityRecord(**updated)
+
 @api_router.post("/incidents", response_model=Incident)
 async def create_incident(data: IncidentCreate, user: User = Depends(get_current_user)):
     incident = Incident(**data.model_dump())
