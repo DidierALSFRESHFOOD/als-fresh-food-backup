@@ -432,6 +432,30 @@ async def delete_compte(compte_id: str, user: User = Depends(get_current_user)):
     
     return {'message': 'Compte et données associées supprimés'}
 
+@api_router.put("/comptes/{compte_id}", response_model=Compte)
+async def update_compte(compte_id: str, data: CompteCreate, user: User = Depends(get_current_user)):
+    if user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
+    
+    # Get existing compte
+    existing = await db.comptes.find_one({'id': compte_id}, {'_id': 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Compte non trouvé")
+    
+    # Update fields
+    update_data = data.model_dump(exclude_unset=True)
+    update_data['id'] = compte_id
+    update_data['created_by'] = existing['created_by']
+    update_data['created_at'] = existing['created_at']
+    
+    await db.comptes.update_one({'id': compte_id}, {'$set': update_data})
+    
+    updated_compte = await db.comptes.find_one({'id': compte_id}, {'_id': 0})
+    if isinstance(updated_compte.get('created_at'), str):
+        updated_compte['created_at'] = datetime.fromisoformat(updated_compte['created_at'])
+    
+    return Compte(**updated_compte)
+
 # ==================== OPPORTUNITES ROUTES ====================
 
 @api_router.post("/opportunites", response_model=Opportunite)
