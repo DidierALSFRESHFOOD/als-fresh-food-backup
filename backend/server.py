@@ -434,13 +434,14 @@ async def delete_compte(compte_id: str, user: User = Depends(get_current_user)):
 
 @api_router.put("/comptes/{compte_id}", response_model=Compte)
 async def update_compte(compte_id: str, data: CompteCreate, user: User = Depends(get_current_user)):
-    if user.role != 'Admin_Directeur':
-        raise HTTPException(status_code=403, detail="Accès réservé à la Direction commerciale")
-    
     # Get existing compte
     existing = await db.comptes.find_one({'id': compte_id}, {'_id': 0})
     if not existing:
         raise HTTPException(status_code=404, detail="Compte non trouvé")
+    
+    # Check permissions: owner or admin
+    if existing['created_by'] != user.id and user.role != 'Admin_Directeur':
+        raise HTTPException(status_code=403, detail="Vous ne pouvez modifier que vos propres fiches")
     
     # Update fields
     update_data = data.model_dump(exclude_unset=True)
